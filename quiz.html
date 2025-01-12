@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>3rd Grade Math Quiz (10 Questions)</title>
+    <style>
+        /* ----- BASIC PAGE STYLING ----- */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 100vh;
+        }
+
+        h1 {
+            margin-top: 30px;
+            color: #333;
+            font-size: 2.0em;
+        }
+
+        /* ----- QUESTION & ANSWER BUTTONS ----- */
+        #quiz-container {
+            margin-top: 20px;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 30px;
+            border-radius: 8px;
+            text-align: center;
+            width: 80%;
+            max-width: 600px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        }
+
+        #question {
+            font-size: 1.4em;
+            margin-bottom: 20px;
+            color: #444;
+        }
+
+        .answer-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .answer-buttons button {
+            margin: 10px;
+            padding: 12px 20px;
+            font-size: 1em;
+            cursor: pointer;
+            border: none;
+            border-radius: 4px;
+            background-color: #f0f0f0;
+            transition: background-color 0.3s;
+        }
+
+        .answer-buttons button:hover {
+            background-color: #dce775;
+        }
+
+        /* ----- FEEDBACK ----- */
+        #feedback {
+            font-size: 1.2em;
+            margin: 20px 0;
+            min-height: 40px;
+        }
+
+        /* Confetti / Sparkle effect on correct answer */
+        .confetti {
+            color: #2e7d32; /* Greenish color */
+            font-weight: bold;
+            animation: sparkle 1.5s infinite alternate;
+        }
+
+        @keyframes sparkle {
+            from { opacity: 0.2; }
+            to { opacity: 1; }
+        }
+
+        /* Shake effect on wrong answer */
+        .shake {
+            color: #c62828; /* Red color */
+            animation: shakeAnim 0.5s;
+        }
+
+        @keyframes shakeAnim {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+            100% { transform: translateX(0); }
+        }
+
+        /* ----- SCOREBOARD / END SCREEN ----- */
+        #score-container {
+            display: none; /* Hidden until the quiz is finished */
+            margin-top: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 30px;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 600px;
+            text-align: center;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        }
+
+        #score-message {
+            font-size: 1.6em;
+            margin-bottom: 20px;
+        }
+
+        .final-cheer {
+            font-size: 1.2em;
+            color: #2e7d32; /* Green */
+        }
+    </style>
+</head>
+<body>
+
+    <h1>3rd Grade Math Quiz</h1>
+
+    <div id="quiz-container">
+        <p id="question"></p>
+        <div class="answer-buttons" id="answer-buttons"></div>
+        <p id="feedback"></p>
+    </div>
+
+    <div id="score-container">
+        <p id="score-message"></p>
+        <p class="final-cheer">You did it!</p>
+    </div>
+
+    <script>
+        /********************************************
+         * 1) CREATE AN ARRAY OF 10 QUESTIONS
+         ********************************************/
+        const questions = [
+            {
+                question: "1) What is 5 + 3?",
+                answers: ["6", "7", "8", "9"],
+                correctIndex: 2  // "8"
+            },
+            {
+                question: "2) What is 9 - 4?",
+                answers: ["3", "5", "6", "7"],
+                correctIndex: 1  // "5"
+            },
+            {
+                question: "3) What is 6 x 2?",
+                answers: ["10", "12", "14", "8"],
+                correctIndex: 1  // "12"
+            },
+            {
+                question: "4) What is 15 - 7?",
+                answers: ["7", "8", "9", "10"],
+                correctIndex: 1  // "8"
+            },
+            {
+                question: "5) What is 3 x 4?",
+                answers: ["6", "9", "12", "15"],
+                correctIndex: 2  // "12"
+            },
+            {
+                question: "6) What is 10 + 5?",
+                answers: ["13", "14", "15", "16"],
+                correctIndex: 2  // "15"
+            },
+            {
+                question: "7) What is 18 - 9?",
+                answers: ["7", "8", "9", "10"],
+                correctIndex: 2  // "9"
+            },
+            {
+                question: "8) What is 7 + 6?",
+                answers: ["11", "12", "13", "14"],
+                correctIndex: 2  // "13"
+            },
+            {
+                question: "9) What is 8 x 2?",
+                answers: ["14", "15", "16", "18"],
+                correctIndex: 2  // "16"
+            },
+            {
+                question: "10) What is 16 ÷ 4?",
+                answers: ["2", "3", "4", "5"],
+                correctIndex: 2  // "4"
+            }
+        ];
+
+        // Track the current question index and score
+        let currentQuestion = 0;
+        let score = 0;
+
+        // Grab elements
+        const questionEl = document.getElementById("question");
+        const answerButtonsEl = document.getElementById("answer-buttons");
+        const feedbackEl = document.getElementById("feedback");
+        const scoreContainer = document.getElementById("score-container");
+        const scoreMessage = document.getElementById("score-message");
+
+        /********************************************
+         * 2) LOAD THE CURRENT QUESTION
+         ********************************************/
+        function loadQuestion() {
+            // Clear previous feedback
+            feedbackEl.innerHTML = "";
+            feedbackEl.className = "";
+
+            // Get the question object
+            const q = questions[currentQuestion];
+
+            // Display the question text
+            questionEl.textContent = q.question;
+
+            // Clear old answer buttons
+            answerButtonsEl.innerHTML = "";
+
+            // Create new buttons for each answer
+            q.answers.forEach((answer, index) => {
+                const btn = document.createElement("button");
+                btn.textContent = answer;
+                // When clicked, check if this is correct
+                btn.onclick = () => checkAnswer(index);
+                answerButtonsEl.appendChild(btn);
+            });
+        }
+
+        /********************************************
+         * 3) CHECK THE SELECTED ANSWER
+         ********************************************/
+        function checkAnswer(selectedIndex) {
+            const correctIndex = questions[currentQuestion].correctIndex;
+
+            // If correct
+            if (selectedIndex === correctIndex) {
+                feedbackEl.innerHTML = "Wonderful!<br>Brilliant!<br>Fantastic!";
+                feedbackEl.className = "confetti";
+                score++;
+
+                // Move to next question after a short delay
+                setTimeout(() => {
+                    currentQuestion++;
+                    if (currentQuestion < questions.length) {
+                        loadQuestion();
+                    } else {
+                        // No more questions, show final score
+                        showScore();
+                    }
+                }, 1200);
+
+            } else {
+                feedbackEl.innerHTML = "Try again!";
+                feedbackEl.className = "shake";
+            }
+        }
+
+        /********************************************
+         * 4) SHOW THE FINAL SCORE
+         ********************************************/
+        function showScore() {
+            // Hide the quiz container
+            document.getElementById("quiz-container").style.display = "none";
+
+            // Show the score container
+            scoreContainer.style.display = "block";
+
+            scoreMessage.textContent = "You got " + score + " out of " + questions.length + " correct!";
+        }
+
+        // Load the first question on page load
+        window.onload = loadQuestion;
+    </script>
+</body>
+</html>
